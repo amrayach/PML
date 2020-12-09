@@ -6,7 +6,11 @@ from sklearn import metrics
 import nlpaug.augmenter.word as naw
 
 # text-preprocessing
+import nltk
+from nltk.corpus import stopwords
 
+
+# nltk.download('averaged_perceptron_tagger')
 
 def lower(text):
     return text.lower()
@@ -37,6 +41,26 @@ def augment_text_wordnet(text):
     clean_text = aug.augment(text)
     return text
 
+def remove_numbers(text):
+    return re.sub(r'\d+','', text)
+
+def remove_single_letters(text):
+    return re.sub(r'\s[a-z]\s',' ', text)
+
+def remove_stop_words(text):
+    stop_words = set(stopwords.words('english'))
+    text = nltk.word_tokenize(text)
+    text = ' '.join([w for w in text if not lower(w) in stop_words])
+
+    return text
+
+def remove_single_characters(text):
+    return re.sub(r'\b[a-zA-Z]\b', '', text)
+
+def remove_special_characters(text):
+    clean_text = re.sub(r'[!\n\\\/.,#\?\-\_\(\)\[\]\{\}§$%&\*\";:\']', ' ', text, flags=re.MULTILINE)
+    return clean_text
+
 preprocessing_setps = {
     'remove_hashtags': remove_hashtags,
     'remove_urls': remove_urls,
@@ -63,8 +87,12 @@ def get_evaluation(y_true, y_prob, list_metrics):
     output = {}
     if 'accuracy' in list_metrics:
         output['accuracy'] = metrics.accuracy_score(y_true, y_pred)
-    if 'f1' in list_metrics:
-        output['f1'] = metrics.f1_score(y_true, y_pred, average='weighted')
+    if 'f1_weighted' in list_metrics:
+        output['f1_weighted'] = metrics.f1_score(y_true, y_pred, average='weighted')
+    if 'f1_micro' in list_metrics:
+        output['f1_micro'] = metrics.f1_score(y_true, y_pred, average='micro')
+    if 'f1_macro' in list_metrics:
+        output['f1_macro'] = metrics.f1_score(y_true, y_pred, average='macro')
 
     return output
 
@@ -103,50 +131,57 @@ def accuracy(output, target, topk=(1,)):
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
-# preprocess input for prediction
-def preprocess_input(args):
-    raw_text = args.text
-    steps = args.steps
-    for step in steps:
-        raw_text = preprocessing_setps[step](raw_text)
 
-    number_of_characters = args.number_of_characters + \
-        len(args.extra_characters)
-    identity_mat = np.identity(number_of_characters)
-    vocabulary = list(args.alphabet) + list(args.extra_characters)
-    max_length = args.max_length
+def init_log(log_file, args, labels):
+    with open(log_file, 'a+') as f:
+        f.write(f'Model-Log:\n')
+        f.write('=' * 50)
+        f.write(f'\nModel Type: CharacterLevelCNN \n')
+        f.write(f'Feature size: {args.getint("Model", "feature_num")} \n')
+        f.write('=' * 50)
 
-    processed_output = np.array([identity_mat[vocabulary.index(i)] for i in list(
-        raw_text[::-1]) if i in vocabulary], dtype=np.float32)
-    if len(processed_output) > max_length:
-        processed_output = processed_output[:max_length]
-    elif 0 < len(processed_output) < max_length:
-        processed_output = np.concatenate((processed_output, np.zeros(
-            (max_length - len(processed_output), number_of_characters), dtype=np.float32)))
-    elif len(processed_output) == 0:
-        processed_output = np.zeros(
-            (max_length, number_of_characters), dtype=np.float32)
-    return processed_output
+        f.write(f'\nData-Log:\n')
+        f.write('=' * 50)
+        f.write(f'\nDataset: {args.get("Data", "dataset")} \n')
+        f.write(f'Encoding: {args.get("Data", "encoding")} \n')
+        f.write(f'Chunk size: {args.getint("Data", "chunk_size")} \n')
+        f.write(f'Max CSV Rows: {args.getint("Data", "max_csv_rows")} \n')
+        f.write(f'CSV Separator: {args.get("Data", "csv_sep")} \n')
+        f.write(f'CSV Columns: {args.get("Data", "usecols")} \n')
+        f.write(f'Alphabet: {args.get("DataSet", "alphabet")} \n')
+        f.write(f'Character Number: {args.getint("DataSet", "char_num")} \n')
+        f.write(f'l0: {args.getint("DataSet", "l0")} \n')
+        f.write(f'Classes: {labels}\n')
+        if args.getboolean('Data', 'preprocess_data'):
+            f.write(f'Preprocess Text Steps: {args.get("Data", "steps")} \n')
 
+        f.write('=' * 50)
+        f.write(f'\nTrain-Log:\n')
+        f.write('=' * 50)
+        f.write(f'\nMax Epochs: {args.getint("Train", "epochs")} \n')
+        f.write(f'Batch Size: {args.getint("Train", "batch_size")} \n')
+        f.write(f'Train Size: {args.getfloat("Train", "train_size")} \n')
+        f.write(f'Dev Size: {args.getfloat("Train", "dev_size")} \n')
+        f.write(f'Max-Norm Size: {args.getint("Train", "max_norm")} \n')
+        f.write(f'Optimizer: {args.get("Train", "optimizer")} \n')
+        f.write(f'Scheduler: {args.get("Train", "scheduler")} \n')
+        f.write(f'Learning Rate: {args.getfloat("Train", "lr")} \n')
+        if args.getboolean('Train', 'early_stopping'):
+            f.write(f'Patience: {args.getint("Train", "patience")} \n')
+        f.write(f'Learning Rate: {args.getboolean("Train", "continue_from_checkpoint")} \n')
+        if args.getboolean('Train', 'continue_from_checkpoint'):
+            f.write(f'Continue Train from this Model: {args.get("Log", "continue_from_model_checkpoint")} \n')
 
-# cyclic learning rate scheduling
-
-def cyclical_lr(stepsize, min_lr=1.7e-3, max_lr=1e-2):
-
-    # Scaler: we can adapt this if we do not want the triangular CLR
-    def scaler(x): return 1.
-
-    # Lambda function to calculate the LR
-    def lr_lambda(it): return min_lr + (max_lr -
-                                        min_lr) * relative(it, stepsize)
-
-    # Additional function to see where on the cycle we are
-    def relative(it, stepsize):
-        cycle = math.floor(1 + it / (2 * stepsize))
-        x = abs(it / stepsize - 2 * cycle + 1)
-        return max(0, (1 - x)) * scaler(cycle)
-
-    return lr_lambda
+        f.write('=' * 50)
+        f.write(f'\nLog-Information:\n')
+        f.write('=' * 50)
+        f.write(f'\nFlush History: {args.getboolean("Log", "flush_history")} \n')
+        f.write(f'Log Path: {args.get("Log", "log_path")} \n')
+        f.write(f'Output Path: {args.get("Log", "output")} \n')
+        f.write(f'Model Name: {args.get("Log", "model_name")} \n')
+        f.write(f'Log F1: {args.getboolean("Log", "log_f1")} \n')
+        f.write('=' * 50)
+        f.write('\n')
 
 
 if __name__ == '__main__':

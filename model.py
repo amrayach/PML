@@ -1,4 +1,3 @@
-import configparser
 import torch
 import torch.nn as nn
 
@@ -40,14 +39,19 @@ class CharacterLevelCNN(nn.Module):
 
         # compute the  output shape after forwarding an input to the conv layers
         # 128 is the batch size in the paper
-        input_shape = (args.getint('Train', 'batch_size'),
-                       args.getint('DataSet', 'l0'),
-                       args.getint('DataSet', 'char_num'))
-        self.output_dimension = self._get_conv_output(input_shape)
+        #input_shape = (args.getint('Train', 'batch_size'),
+        #               args.getint('DataSet', 'l0'),
+        #               args.getint('DataSet', 'char_num'))
+
+        #input_shape = (args.getint('Train', 'batch_size'),
+        #               args.getint('DataSet', 'char_num'),
+        #               args.getint('DataSet', 'l0'))
+
+
+        #self.output_dimension = self._get_conv_output(input_shape)
 
         # compute output shape after papers rule, still needs verification
-
-        #self.output_dimension = (((args.getint('DataSet', 'l0') - 96)/27) * self.feature_num)
+        self.output_dimension = (int(((args.getint('DataSet', 'l0') - 96)/27) * self.feature_num))
 
         # define linear layers
 
@@ -70,6 +74,9 @@ class CharacterLevelCNN(nn.Module):
 
         self._create_weights()
 
+
+
+
     # utility private functions
     def _create_weights(self, mean=0.0, std=0.05):
         for module in self.modules():
@@ -78,7 +85,7 @@ class CharacterLevelCNN(nn.Module):
 
     def _get_conv_output(self, shape):
         x = torch.rand(shape)
-        x = x.transpose(1, 2)
+        #x = x.transpose(1, 2)
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)
@@ -92,7 +99,7 @@ class CharacterLevelCNN(nn.Module):
     # forward
     def forward(self, x):
         #print(x.size())
-        x = x.transpose(1, 2)
+        #x = x.transpose(1, 2)
         #print(x.size())
         x = self.conv1(x)
         x = self.conv2(x)

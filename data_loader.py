@@ -26,7 +26,7 @@ def get_sample_weights(labels):
 
 def load_data(args, mode='train'):
     usecols = list(map(lambda x: int(x), args.get('Data', 'usecols').split(',')))
-    chunks = pd.read_csv('data/' + args.get('Data', 'dataset') + '/'+ mode +'.csv',
+    chunks = pd.read_csv('data/' + args.get('Data', 'dataset') + '/' + mode + '.csv',
                          usecols=usecols,
                          chunksize=args.getint('Data', 'chunk_size'),
                          encoding=args['Data'].get('encoding'),
@@ -98,7 +98,7 @@ class MyDataset(Dataset):
         return self.length
 
 
-    def __getitem__(self, idx):
+    def __getitema__(self, idx):
         raw_text = self.data[idx]
 
         data = np.array([self.identity_mat[self.alphabet.index(i)] for i in list(raw_text)[::-1] if i in self.alphabet],
@@ -125,7 +125,7 @@ class MyDataset(Dataset):
         return class_weight, num_class
 
 
-    def __getitemaa__(self, idx):
+    def __getitem__(self, idx):
         X = self.oneHotEncode(idx)
         y = self.labels[idx]
         return X, y
@@ -133,7 +133,7 @@ class MyDataset(Dataset):
     def oneHotEncode(self, idx):
         # X = (batch, 70, sequence_length)
         X = torch.zeros(len(self.alphabet), self.l0)
-        sequence = self.data[idx]
+        sequence = self.data[idx][:self.l0]
         for index_char, char in enumerate(sequence[::-1]):
             if self.char2Index(char) != -1:
                 X[self.char2Index(char)][index_char] = 1.0

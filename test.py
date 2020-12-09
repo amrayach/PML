@@ -1,23 +1,29 @@
 import os
-import argparse
-import datetime
-import sys
-import errno
 from data_loader import load_data, MyDataset
 from model import CharacterLevelCNN
 from torch.utils.data import DataLoader
 import torch
+from sklearn.metrics import classification_report, f1_score, plot_confusion_matrix
+from tensorboardX import SummaryWriter
+from tqdm import tqdm
 from torch import nn
-from torch.autograd import Variable
-import torch.nn.functional as F
-from metric import print_f_score
-import configparser
 
+
+import configparser
+import utils
 
 if __name__ == '__main__':
 
     args = configparser.ConfigParser()
     args.read('argsConfig.ini')
+    log_dir = args.get('Test', 'model_log_dir')
+    writer = SummaryWriter(log_dir)
+    log_file = log_dir + 'log.txt'
+
+    with open(log_file, 'a') as f:
+        f.write('=' * 50)
+        f.write('Testing')
+        f.write('=' * 50)
 
     # load testing data
     print("\nLoading testing data...")
@@ -29,50 +35,94 @@ if __name__ == '__main__':
                        "shuffle": False,
                        "num_workers": args.getint('Train', 'workers'),
                        "drop_last": True}
-    test_loader = DataLoader(test_dataset, **testing_params)
+    test_generator = DataLoader(test_dataset, **testing_params)
 
-    _, num_class_test = test_dataset.get_class_weight()
     print('\nNumber of testing samples: '+str(test_dataset.__len__()))
-    for i, c in enumerate(num_class_test):
-        print("\tLabel {:d}:".format(i).ljust(15)+"{:d}".format(c).rjust(8))
+    with open(log_file, 'a') as f:
+        f.write('\nNumber of testing samples: '+str(test_dataset.__len__())+'\n')
 
-    #args.num_features = len(test_dataset.alphabet)
-    #model = CharCNN(args)
     model = CharacterLevelCNN(number_of_classes, args)
 
-    print("=> loading weights from '{}'".format(args.model_path))
-    assert os.path.isfile(args.model_path), "=> no checkpoint found at '{}'".format(args.model_path)
-    checkpoint = torch.load(args.model_path)
+    print("=> loading weights from '{}'".format(args.get('Test', 'model_to_test')))
+    #assert os.path.isfile(args.get('Test', 'model_to_test')), "=> no checkpoint found at '{}'".format(args.get('Test', 'model_to_test'))
+    with open(log_file, 'a') as f:
+        f.write("\n=> loading weights from '{}'".format(args.get('Test', 'model_to_test')))
+    checkpoint = torch.load(args.get('Test', 'model_to_test'))
     model.load_state_dict(checkpoint['state_dict'])
 
     # using GPU
-    if args.cuda:
+    if args.getboolean('Device', 'enable_gpu'):
         model = torch.nn.DataParallel(model).cuda()
 
     model.eval()
-    corrects, avg_loss, accumulated_loss, size = 0, 0, 0, 0
-    predicates_all, target_all = [], []
-    print('\nTesting...')
-    for i_batch, (data) in enumerate(test_loader):
-        inputs, target = data
-        target.sub_(1)
-        size+=len(target)
-        if args.cuda:
-            inputs, target = inputs.cuda(), target.cuda()
+    losses = utils.AverageMeter()
+    accuracies = utils.AverageMeter()
+    num_iter_per_epoch = len(test_generator)
+    if args.get('Train', 'criterion') == 'nllloss':
+        criterion = nn.NLLLoss()
 
-        inputs = Variable(inputs, volatile=True)
-        target = Variable(target)
-        logit = model(inputs)
-        predicates = torch.max(logit, 1)[1].view(target.size()).data
-        accumulated_loss += F.nll_loss(logit, target, size_average=False).data[0]
-        corrects += (torch.max(logit, 1)[1].view(target.size()).data == target.data).sum()
-        predicates_all+=predicates.cpu().numpy().tolist()
-        target_all+=target.data.cpu().numpy().tolist()
-        
-    avg_loss = accumulated_loss/size
-    accuracy = 100.0 * corrects/size
-    print('\rEvaluation - loss: {:.6f}  acc: {:.3f}%({}/{}) '.format(avg_loss, 
-                                                                       accuracy, 
-                                                                       corrects, 
-                                                                       size))
-    print_f_score(predicates_all, target_all)
+    y_true = []
+    y_pred = []
+
+    for n_iter, batch in tqdm(enumerate(test_generator), total=num_iter_per_epoch):
+        features, labels = batch
+        labels.sub_(1)
+        if torch.cuda.is_available():
+            features = features.cuda()
+            labels = labels.cuda()
+        with torch.no_grad():
+            predictions = model(features)
+        loss = criterion(predictions, labels)
+
+        y_true += labels.cpu().numpy().tolist()
+        y_pred += torch.max(predictions, 1)[1].cpu().numpy().tolist()
+
+        validation_metrics = utils.get_evaluation(labels.cpu().numpy(),
+                                                  predictions.cpu().detach().numpy(),
+                                                  list_metrics=["accuracy", "f1_weighted", "f1_micro", "f1_macro"])
+        accuracy = validation_metrics['accuracy']
+        f1_weighted = validation_metrics['f1_weighted']
+        f1_micro = validation_metrics['f1_micro']
+        f1_macro = validation_metrics["f1_macro"]
+
+        losses.update(loss.data, features.size(0))
+        accuracies.update(validation_metrics["accuracy"], features.size(0))
+
+        writer.add_scalar('Test/Loss',
+                          loss.item(),
+                          n_iter)
+
+        writer.add_scalar('Test/Accuracy',
+                          accuracy,
+                          n_iter)
+
+        writer.add_scalar('Test/f1-weighted',
+                          f1_weighted,
+                          n_iter)
+
+        writer.add_scalar('Test/f1-micro',
+                          f1_micro,
+                          n_iter)
+
+        writer.add_scalar('Test/f1-macro',
+                          f1_macro,
+                          n_iter)
+
+    f1_test_weighted = f1_score(y_true, y_pred, average='weighted')
+    f1_test_micro = f1_score(y_true, y_pred, average='micro')
+    f1_test_macro = f1_score(y_true, y_pred, average='macro')
+
+    report = classification_report(y_true, y_pred)
+    cnf_matrix_plot = plot_confusion_matrix()
+
+    print(report)
+
+    with open(log_file, 'a') as f:
+        f.write(f'Average loss: {losses.avg.item()} \n')
+        f.write(f'Average accuracy: {accuracies.avg.item()} \n')
+        f.write(f'F1 Weighted score {f1_test_weighted} \n\n')
+        f.write(f'F1 Micro score {f1_test_micro} \n\n')
+        f.write(f'F1 Macro score {f1_test_macro} \n\n')
+        f.write(report)
+        f.write('=' * 50)
+        f.write('\n')
