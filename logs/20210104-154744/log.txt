@@ -1,0 +1,60 @@
+Model-Log:
+==================================================
+Model Type: CharacterLevelCNN 
+Feature size: 256 
+==================================================
+Data-Log:
+==================================================
+Dataset: datasets/ag_news 
+Encoding: utf-8 
+Chunk size: 100 
+Max CSV Rows: 1000 
+CSV Separator: , 
+CSV Columns: 0,1,2 
+Alphabet: abcdefghijklmnopqrstuvwxyz0123456789
+-,;.!?:'"/\|_@#$%^&*~`+-=<>()[]{} 
+Character Number: 70 
+l0: 1014 
+Classes: ['tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(0)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(1)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(2)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)', 'tensor(3)']
+Preprocess Text Steps: None 
+==================================================
+Train-Log:
+==================================================
+Max Epochs: 1 
+Batch Size: 128 
+Train Size: 0.85 
+Dev Size: 0.15 
+Max-Norm Size: 400 
+Optimizer: SGD 
+Scheduler: step 
+Learning Rate: 0.01 
+Learning Rate: False 
+==================================================
+Log-Information:
+==================================================
+Flush History: True 
+Log Path: logs/ 
+Output Path: models/ 
+Model Name:  
+Log F1: True 
+==================================================
+Training on Epoch 0 
+Average loss: 1.4817219972610474 
+Average accuracy: 0.2421875 
+F1 Weighted score: 0.23331936518891916 
+
+F1 Micro score: 0.2421875 
+
+F1 Macro score: 0.23301049184992942 
+
+              precision    recall  f1-score   support
+
+           0       0.22      0.40      0.29        93
+           1       0.35      0.13      0.19        97
+           2       0.20      0.17      0.18        93
+           3       0.27      0.27      0.27       101
+
+    accuracy                           0.24       384
+   macro avg       0.26      0.24      0.23       384
+weighted avg       0.26      0.24      0.23       384
+*************************
