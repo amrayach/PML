@@ -248,7 +248,7 @@ def show(x, y, dataset=None):
 
 if __name__ == '__main__':
     args = configparser.ConfigParser()
-    args.read('/home/pml_28/MS1/argsConfig.ini')
+    args.read('./argsConfig.ini')
 
     if not os.path.exists('plots'):
         os.makedirs('plots')

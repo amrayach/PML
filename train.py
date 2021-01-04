@@ -266,7 +266,7 @@ def save_checkpoint(model, state, optimizer, args, epoch, validation_loss, valid
 
 def main():
     args = configparser.ConfigParser()
-    args.read('/home/pml_28/MS1/argsConfig.ini')
+    args.read('argsConfig.ini')
 
 
     if args.getboolean('Log', 'flush_history') == 1:
