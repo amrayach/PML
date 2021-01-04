@@ -26,7 +26,7 @@ def get_sample_weights(labels):
 
 def load_data(args, mode='train'):
     usecols = list(map(lambda x: int(x), args.get('Data', 'usecols').split(',')))
-    chunks = pd.read_csv('data/' + args.get('Data', 'dataset') + '/' + mode + '.csv',
+    chunks = pd.read_csv(args.get('Data', 'dataset') + '/' + mode + '.csv',
                          usecols=usecols,
                          chunksize=args.getint('Data', 'chunk_size'),
                          encoding=args['Data'].get('encoding'),

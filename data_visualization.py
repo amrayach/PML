@@ -14,6 +14,7 @@ from utils import remove_double_new_line, remove_special_characters, remove_stop
 
 
 def load_data(args, mode='train'):
+    text = []
     usecols = list(map(lambda x: int(x), args.get('Data', 'usecols').split(',')))
     path = args.get('Data', 'dataset') + '/'+ mode +'.csv';
     print('\n path: ' + path)
@@ -207,13 +208,18 @@ def treemap_plot(x,y):
 ########################## generic plots ################################
 def classes_pie(y, outfile='classes_pie.png', dataset=None):
     fig = plt.figure(figsize=(6, 5))
+    labels=[]
+    dataset_name = None
     if dataset == None:
         return
-    elif dataset == 'yelp':
+    elif 'yelp' in dataset:
         labels =  'negative', 'positive'
-    elif dataset == 'ag_news':
+        dataset_name = 'yelp'
+    elif 'ag_news' in dataset:
         labels = 'World', 'Sports', 'Business', 'Sci/Tech'
-
+        dataset_name = 'ag_news'
+    else:
+        raise Exception("error: unknown dataset")
     counts = Counter(y)
     sorted(counts.items())
 
@@ -228,7 +234,7 @@ def classes_pie(y, outfile='classes_pie.png', dataset=None):
         plt.xlabel('reviews ratio in each class')
     plt.setp(autotexts, size=8, weight="bold")
     plt.show()
-    fig.savefig(outfile, format='png', dpi=300)
+    fig.savefig('plots/' + dataset_name + '_classes_pie.png', format='png', dpi=300)
 
 
 def show(x, y, dataset=None):
@@ -242,7 +248,7 @@ def show(x, y, dataset=None):
 
 if __name__ == '__main__':
     args = configparser.ConfigParser()
-    args.read('argsConfig.ini')
+    args.read('/home/pml_28/MS1/argsConfig.ini')
 
     if not os.path.exists('plots'):
         os.makedirs('plots')
