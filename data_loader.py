@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from collections import Counter
+import random
 
 from torch.utils.data import DataLoader, Dataset
 import torch.autograd as autograd
@@ -11,6 +12,7 @@ import pandas as pd
 from tqdm import tqdm
 import utils
 import configparser
+from sklearn.model_selection import KFold
 
 
 
@@ -78,6 +80,27 @@ def load_data(args, mode='train'):
 
     number_of_classes = len(set(labels))
     sample_weights = get_sample_weights(labels)
+
+    if args.getint('Data', 'k_folds') > 1:
+        text_label_list = np.array(list(zip(texts, labels)))
+        np.random.shuffle(text_label_list)
+        kf = KFold(n_splits=args.getint('Data', 'k_folds'), shuffle=True)
+        folds = []
+        for train_index, test_index in kf.split(text_label_list):
+            train_texts, train_labels = zip(*list(text_label_list[train_index]))
+            test_texts, test_labels = zip(*list(text_label_list[test_index]))
+            train_texts = list(train_texts)
+            train_labels = list(map(lambda x: int(x), list(train_labels)))
+            train_weights = get_sample_weights(train_labels)
+
+            test_texts = list(test_texts)
+            test_labels = list(map(lambda x: int(x), list(test_labels)))
+            test_weights = get_sample_weights(test_labels)
+            #res = (train_texts, torch.LongTensor(train_labels), train_weights, test_texts, torch.LongTensor(test_labels), test_weights, number_of_classes)
+            folds.append((train_texts, torch.LongTensor(train_labels), train_weights, test_texts, torch.LongTensor(test_labels), test_weights, number_of_classes))
+        return folds
+
+
 
     return texts, torch.LongTensor(labels), number_of_classes, sample_weights
 
