@@ -5,6 +5,7 @@ from datetime import datetime
 
 import torch
 from sklearn.metrics import classification_report, f1_score
+from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from tensorboardX import SummaryWriter
 from torch import nn
@@ -12,6 +13,8 @@ from torch import optim
 from torchviz import make_dot
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from tqdm import tqdm
+import pickle
+
 
 import utils
 from data_loader import load_data, MyDataset
@@ -47,7 +50,7 @@ def train(model, training_generator, optimizer, criterion, epoch, start_iter, wr
         #labels = labels.unsqueeze(1)
         #labels = labels.float()
 
-        loss = criterion(predictions, labels.squeeze())
+        loss = criterion(predictions, labels)
 
         loss.backward()
 
@@ -245,7 +248,7 @@ def evaluate(model, validation_generator, criterion, epoch, writer, log_file, pr
 
     return losses.avg.item(), accuracies.avg.item(), f1_test_weighted
 
-def test(args, test_generator, log_file, writer, number_of_classes, fold, time_stamp):
+def test(args, test_generator, log_file, writer, number_of_classes, fold, time_stamp, test_res_folds):
     with open(log_file, 'a') as f:
         f.write('=' * 50)
         f.write('Testing')
@@ -340,7 +343,20 @@ def test(args, test_generator, log_file, writer, number_of_classes, fold, time_s
     # cnf_matrix_plot = plot_confusion_matrix()
 
     print(report)
+    output = {}
+    output['accuracy'] = metrics.accuracy_score(y_true, y_pred)
+    output['precision'] = metrics.precision_score(y_true, y_pred)
+    output['recall'] = metrics.recall_score(y_true, y_pred)
+    output['f1_micro'] = metrics.f1_score(y_true, y_pred, average='micro')
+    output['f1_macro'] = metrics.f1_score(y_true, y_pred, average='macro')
+    output['f1_weighted'] = metrics.f1_score(y_true, y_pred, average='weighted')
+    output['neg_log_loss'] = metrics.log_loss(y_true, y_pred)
+    output['loss'] = loss.data
+    output['y_true'] = y_true
+    output['y_pred'] = y_pred
 
+
+    test_res_folds[fold] = output
     with open(log_file, 'a') as f:
         f.write(f'Average loss: {losses.avg.item()} \n')
         f.write(f'Average accuracy: {accuracies.avg.item()} \n')
@@ -367,7 +383,7 @@ def save_checkpoint(model, state, optimizer, args, epoch, validation_loss, valid
     if best_model_bool:
         for file in os.listdir('models/' + time_stamp + '_' + args.get('Data', 'dataset').split('/')[1] + '_' + args.get('Train', 'criterion') + '/' + str(fold)):
             if file.split('_')[0] == 'BestModel':
-                os.remove('models/' + time_stamp + '_' + args.get('Data', 'dataset').split('/')[1] + '_' + args.get('Train', 'criterion') + '/' + str(fold) + file)
+                os.remove('models/' + time_stamp + '_' + args.get('Data', 'dataset').split('/')[1] + '_' + args.get('Train', 'criterion') + '/' + str(fold) + '/' + file)
                 break
 
     best_model = '/BestModel_' if best_model_bool else '/'
@@ -453,7 +469,7 @@ def main():
 
     class_names = sorted(list(set(labels)))
     class_names = [str(class_name - 1) for class_name in class_names]
-
+    test_res_folds = {}
     for i in range(len(generators)):
         os.makedirs(logdir + 'train/' + str(i+1))
         os.makedirs(logdir + 'test/' + str(i+1))
@@ -488,9 +504,6 @@ def main():
             else:
                 criterion = nn.CrossEntropyLoss()
             '''
-
-
-
 
         # criterion = nn.BCELoss()
 
@@ -593,7 +606,10 @@ def main():
             save_checkpoint(model, state, optimizer, args, epoch, validation_loss, validation_accuracy, validation_f1, i+1, False, time_stamp)
 
         # Test
-        test(args, generators[i][2], log_file_test, writer_test, number_of_classes, i+1, time_stamp)
+        test(args, generators[i][2], log_file_test, writer_test, number_of_classes, i+1, time_stamp, test_res_folds)
+
+    pickle.dump(test_res_folds, open("./logs/"+time_stamp + '_' + args.get('Data', 'dataset').split('/')[1] + '_' + args.get('Train', 'criterion') + '/' + "test_res_folds.bin", "wb"))
+    print()
 
 if __name__ == '__main__':
     main()

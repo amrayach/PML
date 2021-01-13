@@ -93,6 +93,17 @@ def get_evaluation(y_true, y_prob, list_metrics):
         output['f1_micro'] = metrics.f1_score(y_true, y_pred, average='micro')
     if 'f1_macro' in list_metrics:
         output['f1_macro'] = metrics.f1_score(y_true, y_pred, average='macro')
+    if 'f1_samples' in list_metrics:
+        output['f1_samples'] = metrics.f1_score(y_true, y_pred, average='samples')
+    if 'f1' in list_metrics:
+        output['f1'] = metrics.f1_score(y_true, y_pred, average='binary')
+    if 'precision' in list_metrics:
+        output['precision'] = metrics.precision_score(y_true, y_pred)
+    if 'recall' in list_metrics:
+        output['recall'] = metrics.recall_score(y_true, y_pred)
+    if 'neg_log_loss' in list_metrics:
+        output['neg_log_loss'] = metrics.log_loss(y_true, y_pred)
+
 
     return output
 
