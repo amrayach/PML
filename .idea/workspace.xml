@@ -24,22 +24,7 @@
   <component name="ChangeListManager">
     <list default="true" id="9585f63c-5b48-482c-824f-4d1d1d07ec3a" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CharacterLevelCNN" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CharacterLevelCNN.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/argsConfig.ini" beforeDir="false" afterPath="$PROJECT_DIR$/argsConfig.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_loader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasets/ag_news/train.csv" beforeDir="false" afterPath="$PROJECT_DIR$/datasets/ag_news/train.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasets/twitter/all_data.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasets/yelp/train_medium.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/datasets/yelp/train_small.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/20210104-154744/events.out.tfevents.1609771664.ammer-T14s" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/20210104-154744/log.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/plots/ag_news_classes_pie.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pml_venv/bin/python" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pml_venv/bin/python3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pml_venv/pyvenv.cfg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -249,7 +234,7 @@
       <workItem from="1609881146529" duration="13000" />
       <workItem from="1609887720221" duration="5300000" />
       <workItem from="1610461840039" duration="2281000" />
-      <workItem from="1610466563772" duration="21394000" />
+      <workItem from="1610466563772" duration="22429000" />
     </task>
     <task id="LOCAL-00001" summary="1) Added basic version of KFoldCrossValidations, still needs some refactoring but it is working&#10;1.1) Still need to update the way we create Logs, models Dir for each fold&#10;&#10;2) fixed a bug with the schedular/optimizer steps in the training loop">
       <created>1609892918825</created>
@@ -285,6 +270,6 @@
     <SUITE FILE_PATH="coverage/PML$utils.coverage" NAME="utils Coverage Results" MODIFIED="1607190816265" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PML$data_visualization.coverage" NAME="data_visualization Coverage Results" MODIFIED="1609770797057" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PML$data_loader.coverage" NAME="data_loader Coverage Results" MODIFIED="1609891866910" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/PML$train.coverage" NAME="train Coverage Results" MODIFIED="1610496559624" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/PML$train.coverage" NAME="train Coverage Results" MODIFIED="1610497900320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

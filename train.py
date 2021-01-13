@@ -253,9 +253,9 @@ def test(args, test_generator, log_file, writer, number_of_classes, fold, time_s
 
     model = CharacterLevelCNN(number_of_classes, args)
 
-    for file in os.listdir('models/' + time_stamp + '/' + str(fold)):
+    for file in os.listdir('models/' + time_stamp + '_' + args.get('Data', 'dataset').split('/')[1] + '_' + args.get('Train', 'criterion') + '/' + str(fold)):
         if file.split('_')[0] == 'BestModel':
-            checkpoint = torch.load('models/' + time_stamp + '/' + str(fold) + '/' + file)
+            checkpoint = torch.load('models/' + time_stamp + '_' + args.get('Data', 'dataset').split('/')[1] + '_' + args.get('Train', 'criterion') + '/' + str(fold) + '/' + file)
             break
 
     model.load_state_dict(checkpoint['state_dict'])
@@ -358,19 +358,21 @@ def save_checkpoint(model, state, optimizer, args, epoch, validation_loss, valid
 
     state['state_dict'] = model.state_dict()
     try:
-        os.makedirs('models/' + time_stamp + '/' + str(fold))
+        os.makedirs('models/' + time_stamp + '_' + args.get('Data', 'dataset').split('/')[1] + '_' + args.get('Train', 'criterion') + '/' + str(fold))
+
+
     except:
         pass
 
     if best_model_bool:
-        for file in os.listdir('models/' + time_stamp + '/' + str(fold)):
+        for file in os.listdir('models/' + time_stamp + '_' + args.get('Data', 'dataset').split('/')[1] + '_' + args.get('Train', 'criterion') + '/' + str(fold)):
             if file.split('_')[0] == 'BestModel':
-                os.remove('models/' + time_stamp + '/' + str(fold) + file)
+                os.remove('models/' + time_stamp + '_' + args.get('Data', 'dataset').split('/')[1] + '_' + args.get('Train', 'criterion') + '/' + str(fold) + file)
                 break
 
     best_model = '/BestModel_' if best_model_bool else '/'
     torch.save(state,
-               'models/' + time_stamp + '/' + str(fold) + best_model + 'model_{}_epoch_{}_l0_{}_lr_{}_loss_{}_acc_{}_f1_{}.pt'.format(
+               'models/' + time_stamp + '_' + args.get('Data', 'dataset').split('/')[1] + '_' + args.get('Train', 'criterion') + '/' + str(fold) + best_model + 'model_{}_epoch_{}_l0_{}_lr_{}_loss_{}_acc_{}_f1_{}.pt'.format(
                    args.get('Log', 'model_name') + '_' + str(fold),
                    epoch,
                    args.getint('DataSet', 'l0'),
@@ -399,7 +401,7 @@ def main():
 
     now = datetime.now()
     time_stamp = now.strftime("%Y%m%d-%H%M%S")
-    logdir = 'logs/' + time_stamp + "/"
+    logdir = 'logs/' + time_stamp + '_' + args.get('Data', 'dataset').split('/')[1] + '_' + args.get('Train', 'criterion') + '/'
     os.makedirs(logdir)
 
     data_tuple = load_data(args, 'train')
