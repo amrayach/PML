@@ -5,7 +5,7 @@ import torch.nn as nn
 class CharacterLevelCNN(nn.Module):
     def __init__(self, class_num, args):
         super(CharacterLevelCNN, self).__init__()
-
+        self.loss = args.get('Train', 'criterion')
         self.dropout_input = nn.Dropout2d(args.getfloat('Model', 'dropout_input'))
         self.feature_num = args.getint('Model', 'feature_num')
         self.conv1 = nn.Sequential(nn.Conv1d(args.getint('DataSet', 'char_num'),
@@ -67,9 +67,10 @@ class CharacterLevelCNN(nn.Module):
             nn.Dropout(0.5)
         )
 
-        #self.fc3 = nn.Linear(1024, 3)
         self.fc3 = nn.Linear(1024, class_num)
-        self.log_softmax = nn.LogSoftmax(dim=1)
+
+        if self.loss == 'nllloss':
+            self.log_softmax = nn.LogSoftmax(dim=1)
         # initialize weights
 
         self._create_weights()
@@ -117,6 +118,7 @@ class CharacterLevelCNN(nn.Module):
         # linear layer
         x = self.fc3(x)
         # output layer
-        x = self.log_softmax(x)
+        if self.loss == 'nllloss':
+            x = self.log_softmax(x)
 
         return x

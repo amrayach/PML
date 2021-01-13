@@ -44,7 +44,10 @@ def train(model, training_generator, optimizer, criterion, epoch, start_iter, wr
         y_true += labels.cpu().numpy().tolist()
         y_pred += torch.max(predictions, 1)[1].cpu().numpy().tolist()
 
-        loss = criterion(predictions, labels)
+        #labels = labels.unsqueeze(1)
+        #labels = labels.float()
+
+        loss = criterion(predictions, labels.squeeze())
 
         loss.backward()
 
@@ -242,16 +245,133 @@ def evaluate(model, validation_generator, criterion, epoch, writer, log_file, pr
 
     return losses.avg.item(), accuracies.avg.item(), f1_test_weighted
 
+def test(args, test_generator, log_file, writer, number_of_classes, fold, time_stamp):
+    with open(log_file, 'a') as f:
+        f.write('=' * 50)
+        f.write('Testing')
+        f.write('=' * 50)
 
-def save_checkpoint(model, state, optimizer, args, epoch, validation_loss, validation_accuracy, validation_f1):
+    model = CharacterLevelCNN(number_of_classes, args)
+
+    for file in os.listdir('models/' + time_stamp + '/' + str(fold)):
+        if file.split('_')[0] == 'BestModel':
+            checkpoint = torch.load('models/' + time_stamp + '/' + str(fold) + '/' + file)
+            break
+
+    model.load_state_dict(checkpoint['state_dict'])
+
+    # using GPU
+    if args.getboolean('Device', 'enable_gpu'):
+        model = torch.nn.DataParallel(model).cuda()
+
+    model.eval()
+    losses = utils.AverageMeter()
+    accuracies = utils.AverageMeter()
+    num_iter_per_epoch = len(test_generator)
+
+
+    if args.get('Train', 'criterion') == 'nllloss':
+        criterion = nn.NLLLoss()
+    elif args.get('Train', 'criterion') == 'celoss':
+        criterion = nn.CrossEntropyLoss()
+        '''
+        if number_of_classes == 2:
+            if args.get('Train', 'binary_cross_entropy_type') == 'normal':
+                criterion = nn.BCELoss()
+            else:
+                criterion = nn.BCEWithLogitsLoss()
+        else:
+            criterion = nn.CrossEntropyLoss()
+        '''
+
+
+    y_true = []
+    y_pred = []
+
+    for n_iter, batch in tqdm(enumerate(test_generator), total=num_iter_per_epoch):
+        features, labels = batch
+        labels.sub_(1)
+        if torch.cuda.is_available():
+            features = features.cuda()
+            labels = labels.cuda()
+        with torch.no_grad():
+            predictions = model(features)
+        loss = criterion(predictions, labels)
+
+        y_true += labels.cpu().numpy().tolist()
+        y_pred += torch.max(predictions, 1)[1].cpu().numpy().tolist()
+
+        validation_metrics = utils.get_evaluation(labels.cpu().numpy(),
+                                                  predictions.cpu().detach().numpy(),
+                                                  list_metrics=["accuracy", "f1_weighted", "f1_micro", "f1_macro"])
+        accuracy = validation_metrics['accuracy']
+        f1_weighted = validation_metrics['f1_weighted']
+        f1_micro = validation_metrics['f1_micro']
+        f1_macro = validation_metrics["f1_macro"]
+
+        losses.update(loss.data, features.size(0))
+        accuracies.update(validation_metrics["accuracy"], features.size(0))
+
+        writer.add_scalar('Test/Loss',
+                          loss.item(),
+                          n_iter)
+
+        writer.add_scalar('Test/Accuracy',
+                          accuracy,
+                          n_iter)
+
+        writer.add_scalar('Test/f1-weighted',
+                          f1_weighted,
+                          n_iter)
+
+        writer.add_scalar('Test/f1-micro',
+                          f1_micro,
+                          n_iter)
+
+        writer.add_scalar('Test/f1-macro',
+                          f1_macro,
+                          n_iter)
+
+    f1_test_weighted = f1_score(y_true, y_pred, average='weighted')
+    f1_test_micro = f1_score(y_true, y_pred, average='micro')
+    f1_test_macro = f1_score(y_true, y_pred, average='macro')
+
+    report = classification_report(y_true, y_pred)
+    # cnf_matrix_plot = plot_confusion_matrix()
+
+    print(report)
+
+    with open(log_file, 'a') as f:
+        f.write(f'Average loss: {losses.avg.item()} \n')
+        f.write(f'Average accuracy: {accuracies.avg.item()} \n')
+        f.write(f'F1 Weighted score {f1_test_weighted} \n\n')
+        f.write(f'F1 Micro score {f1_test_micro} \n\n')
+        f.write(f'F1 Macro score {f1_test_macro} \n\n')
+        f.write(report)
+        f.write('=' * 50)
+        f.write('\n')
+
+
+def save_checkpoint(model, state, optimizer, args, epoch, validation_loss, validation_accuracy, validation_f1, fold, best_model_bool, time_stamp):
     #model_is_cuda = next(model.parameters()).is_cuda
     #model = model.module if model_is_cuda else model
+
     state['state_dict'] = model.state_dict()
-    os.makedirs(args.get('Log', 'output') + '/' + args.get('Log', 'model_name'), exist_ok=True)
+    try:
+        os.makedirs('models/' + time_stamp + '/' + str(fold))
+    except:
+        pass
+
+    if best_model_bool:
+        for file in os.listdir('models/' + time_stamp + '/' + str(fold)):
+            if file.split('_')[0] == 'BestModel':
+                os.remove('models/' + time_stamp + '/' + str(fold) + file)
+                break
+
+    best_model = '/BestModel_' if best_model_bool else '/'
     torch.save(state,
-               args.get('Log', 'output') + args.get('Log',
-                                                    'model_name') + '/model_{}_epoch_{}_l0_{}_lr_{}_loss_{}_acc_{}_f1_{}.pt'.format(
-                   args.get('Log', 'model_name'),
+               'models/' + time_stamp + '/' + str(fold) + best_model + 'model_{}_epoch_{}_l0_{}_lr_{}_loss_{}_acc_{}_f1_{}.pt'.format(
+                   args.get('Log', 'model_name') + '_' + str(fold),
                    epoch,
                    args.getint('DataSet', 'l0'),
                    optimizer.state_dict()[
@@ -264,29 +384,24 @@ def save_checkpoint(model, state, optimizer, args, epoch, validation_loss, valid
                        validation_f1, 4)
                ))
 
-
 def main():
     args = configparser.ConfigParser()
     args.read('argsConfig.ini')
 
 
     if args.getboolean('Log', 'flush_history') == 1:
-        objects = os.listdir(args.get('Log', 'log_path'))
-        for f in objects:
-            if os.path.isdir(args.get('Log', 'log_path') + f):
-                shutil.rmtree(args.get('Log', 'log_path') + f)
+        for f in os.listdir('logs'):
+            shutil.rmtree('logs/' + f)
 
-    if args.getboolean('Log', 'delete_model_name_dir'):
-        objects = os.listdir(args.get('Log', 'output'))
-        for f in objects:
-            if f == args.get('Log', 'model_name'):
-                shutil.rmtree(args.get('Log', 'output') + args.get('Log', 'model_name') + '/')
+    if args.getboolean('Log', 'delete_model_dir'):
+        for f in os.listdir('models'):
+            shutil.rmtree('models/' + f)
 
     now = datetime.now()
-    logdir = args.get('Log', 'log_path') + now.strftime("%Y%m%d-%H%M%S") + "/"
+    time_stamp = now.strftime("%Y%m%d-%H%M%S")
+    logdir = 'logs/' + time_stamp + "/"
     os.makedirs(logdir)
-    log_file = logdir + 'log.txt'
-    writer = SummaryWriter(logdir)
+
     data_tuple = load_data(args, 'train')
     generators = []
     for fold in data_tuple:
@@ -305,6 +420,7 @@ def main():
 
         training_set = MyDataset(train_texts, train_labels, args)
         validation_set = MyDataset(X_dev, y_dev_labels, args)
+        testing_set = MyDataset(test_texts, test_labels, args)
 
         training_params = {"batch_size": args.getint('Train', 'batch_size'),
                            "shuffle": True,
@@ -316,6 +432,11 @@ def main():
                              "num_workers": args.getint('Train', 'workers'),
                              "drop_last": True}
 
+        testing_params = {"batch_size": args.getint('Train', 'batch_size'),
+                          "shuffle": False,
+                          "num_workers": args.getint('Train', 'workers'),
+                          "drop_last": True}
+
         if args.getboolean('Train', 'use_sampler'):
             train_sample_weights = torch.from_numpy(train_sample_weights)
             sampler = WeightedRandomSampler(train_sample_weights.type(
@@ -325,52 +446,19 @@ def main():
 
         training_generator = DataLoader(training_set, **training_params)
         validation_generator = DataLoader(validation_set, **validation_params)
-        generators.append((training_generator, validation_generator))
-
-    print()
-
-    #texts, labels, number_of_classes, sample_weights = load_data(args, 'train')
+        test_generator = DataLoader(testing_set, **testing_params)
+        generators.append((training_generator, validation_generator, test_generator))
 
     class_names = sorted(list(set(labels)))
     class_names = [str(class_name - 1) for class_name in class_names]
 
-    """
-    train_texts, X_dev, train_labels, y_dev_labels, train_sample_weights, _ = train_test_split(texts,
-                                                                                               labels,
-                                                                                               sample_weights,
-                                                                                               train_size=args.getfloat(
-                                                                                                   'Train',
-                                                                                                   'train_size'),
-                                                                                               test_size=args.getfloat(
-                                                                                                   'Train',
-                                                                                                   'dev_size'),
-                                                                                               random_state=42,
-                                                                                               stratify=labels)
-
-    training_set = MyDataset(train_texts, train_labels, args)
-    validation_set = MyDataset(X_dev, y_dev_labels, args)
-
-    training_params = {"batch_size": args.getint('Train', 'batch_size'),
-                       "shuffle": True,
-                       "num_workers": args.getint('Train', 'workers'),
-                       "drop_last": True}
-
-    validation_params = {"batch_size": args.getint('Train', 'batch_size'),
-                         "shuffle": False,
-                         "num_workers": args.getint('Train', 'workers'),
-                         "drop_last": True}
-
-    if args.getboolean('Train', 'use_sampler'):
-        train_sample_weights = torch.from_numpy(train_sample_weights)
-        sampler = WeightedRandomSampler(train_sample_weights.type(
-            'torch.DoubleTensor'), len(train_sample_weights))
-        training_params['sampler'] = sampler
-        training_params['shuffle'] = False
-
-    training_generator = DataLoader(training_set, **training_params)
-    validation_generator = DataLoader(validation_set, **validation_params)
-    """
-    for gen in generators:
+    for i in range(len(generators)):
+        os.makedirs(logdir + 'train/' + str(i+1))
+        os.makedirs(logdir + 'test/' + str(i+1))
+        log_file_train = logdir + 'train/' + str(i+1) + '/' + 'log.txt'
+        log_file_test = logdir + 'test/' + str(i+1) + '/' + 'log.txt'
+        writer_train = SummaryWriter(logdir + 'train/' + str(i+1) + '/')
+        writer_test = SummaryWriter(logdir + 'test/' + str(i+1) + '/')
 
         model = CharacterLevelCNN(number_of_classes, args)
 
@@ -387,6 +475,20 @@ def main():
         # todo check other other loss functions for binary and multi-label problems
         if args.get('Train', 'criterion') == 'nllloss':
             criterion = nn.NLLLoss()
+        elif args.get('Train', 'criterion') == 'celoss':
+            criterion = nn.CrossEntropyLoss()
+            '''
+            if number_of_classes == 2:
+                if args.get('Train', 'binary_cross_entropy_type') == 'normal':
+                    criterion = nn.BCELoss()
+                else:
+                    criterion = nn.BCEWithLogitsLoss()
+            else:
+                criterion = nn.CrossEntropyLoss()
+            '''
+
+
+
 
         # criterion = nn.BCELoss()
 
@@ -403,56 +505,42 @@ def main():
         elif args.get('Train', 'optimizer') == 'ASGD':
             optimizer = optim.ASGD(model.parameters(), lr=args.getfloat('Train', 'lr'))
 
-        if os.path.isfile(args.get('Log', 'continue_from_model_checkpoint')):
-            print("=> loading checkpoint from '{}'".format(args.get('Log', 'continue_from_model_checkpoint')))
-            checkpoint = torch.load(args.get('Log', 'continue_from_model_checkpoint'))
-            start_epoch = checkpoint['epoch']
-            start_iter = checkpoint.get('iter', None)
-            best_f1 = checkpoint.get('best_f1', None)
-            if start_iter is None:
-                start_epoch += 1  # Assume that we saved a model after an epoch finished, so start at the next epoch.
-                start_iter = 0
-            else:
-                start_iter += 1
-            model.load_state_dict(checkpoint['state_dict'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
-        else:
-            start_iter = 0
-            start_epoch = 0
-            best_f1 = 0
-            best_epoch = 0
+        start_iter = 0
+        start_epoch = 0
+        best_f1 = 0
+        best_epoch = 0
 
         if args.get('Train', 'scheduler') == 'clr':
-            stepsize = int(args.getint('Train', 'clr_step_size') * len(gen[0]))
+            stepsize = int(args.getint('Train', 'clr_step_size') * len(generators[i][0]))
             clr = utils.cyclical_lr(stepsize, args.getfloat('Train', 'clr_min_lr'), args.getfloat('Train', 'clr_max_lr'))
             scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, [clr])
         else:
             scheduler = None
             lr_half_cnt = 0
 
-        utils.init_log(log_file=log_file, args=args, labels=class_names)
+        utils.init_log(log_file=log_file_train, args=args, labels=class_names)
         try:
             for epoch in range(start_epoch, args.getint('Train', 'epochs')):
 
                 training_loss, training_accuracy, train_f1 = train(model,
-                                                                   gen[0],
+                                                                   generators[i][0],
                                                                    optimizer,
                                                                    criterion,
                                                                    epoch,
                                                                    start_iter,
-                                                                   writer,
-                                                                   log_file,
+                                                                   writer_train,
+                                                                   log_file_train,
                                                                    scheduler,
                                                                    class_names,
                                                                    args,
                                                                    args.getint('Log', 'print_out_every'))
 
                 validation_loss, validation_accuracy, validation_f1 = evaluate(model,
-                                                                               gen[1],
+                                                                               generators[i][1],
                                                                                criterion,
                                                                                epoch,
-                                                                               writer,
-                                                                               log_file)
+                                                                               writer_train,
+                                                                               log_file_train)
 
 
                 print('\n[Epoch: {} / {}]\ttrain_loss: {:.4f} \ttrain_acc: {:.4f} \tval_loss: {:.4f} \tval_acc: {:.4f}'.
@@ -460,7 +548,7 @@ def main():
                              validation_accuracy))
                 print("=" * 50)
 
-                with open(log_file, 'a') as f:
+                with open(log_file_train, 'a') as f:
                     f.write('[Epoch: {} / {}]\ttrain_loss: {:.4f} \ttrain_acc: {:.4f} \tval_loss: {:.4f} \tval_acc: {:.4f}\n'.
                       format(epoch + 1, args.getint('Train', 'epochs'), training_loss, training_accuracy, validation_loss,
                              validation_accuracy))
@@ -473,7 +561,7 @@ def main():
                         current_lr /= 2
                         lr_half_cnt += 1
                         print('Decreasing learning rate to {0}'.format(current_lr))
-                        with open(log_file, 'a') as f:
+                        with open(log_file_train, 'a') as f:
                             f.write('Decreasing learning rate to {0}\n'.format(current_lr))
                         for param_group in optimizer.param_groups:
                             param_group['lr'] = current_lr
@@ -484,23 +572,26 @@ def main():
 
                     if args.getint('Log', 'save_interval') > 0 and epoch % args.getint('Log', 'save_interval') == 0:
                         save_checkpoint(model, state, optimizer, args, epoch, validation_loss, validation_accuracy,
-                                        validation_f1)
+                                        validation_f1, i+1, False, time_stamp)
 
                     if validation_f1 > best_f1:
                         best_f1 = validation_f1
                         best_epoch = epoch
                         save_checkpoint(model, state, optimizer, args, epoch, validation_loss, validation_accuracy,
-                                        validation_f1)
+                                        validation_f1, i+1, True, time_stamp)
 
                 if args.getboolean('Train', 'early_stopping'):
                     if epoch - best_epoch > args.getint('Train', 'patience') > 0:
                         print("Early-stopping: Stop training at epoch {}. The lowest loss achieved is {} at epoch {}".format(
                             epoch, validation_loss, best_epoch))
                         break
+
         except KeyboardInterrupt:
             print('Exit Keyboard interrupt\n')
-            save_checkpoint(model, state, optimizer, args, epoch, validation_loss, validation_accuracy, validation_f1)
+            save_checkpoint(model, state, optimizer, args, epoch, validation_loss, validation_accuracy, validation_f1, i+1, False, time_stamp)
 
+        # Test
+        test(args, generators[i][2], log_file_test, writer_test, number_of_classes, i+1, time_stamp)
 
 if __name__ == '__main__':
     main()

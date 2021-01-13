@@ -113,7 +113,7 @@ if __name__ == '__main__':
     f1_test_macro = f1_score(y_true, y_pred, average='macro')
 
     report = classification_report(y_true, y_pred)
-    cnf_matrix_plot = plot_confusion_matrix()
+    #cnf_matrix_plot = plot_confusion_matrix()
 
     print(report)
 
@@ -126,3 +126,30 @@ if __name__ == '__main__':
         f.write(report)
         f.write('=' * 50)
         f.write('\n')
+
+
+
+# This was the continue from checkpoint training part but
+        # is not compatible with the cross validation part
+        # so it is temporary removed but could be adjusted in the future
+
+    '''
+    if os.path.isfile(args.get('Log', 'continue_from_model_checkpoint')):
+        print("=> loading checkpoint from '{}'".format(args.get('Log', 'continue_from_model_checkpoint')))
+        checkpoint = torch.load(args.get('Log', 'continue_from_model_checkpoint'))
+        start_epoch = checkpoint['epoch']
+        start_iter = checkpoint.get('iter', None)
+        best_f1 = checkpoint.get('best_f1', None)
+        if start_iter is None:
+            start_epoch += 1  # Assume that we saved a model after an epoch finished, so start at the next epoch.
+            start_iter = 0
+        else:
+            start_iter += 1
+        model.load_state_dict(checkpoint['state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+    else:
+        start_iter = 0
+        start_epoch = 0
+        best_f1 = 0
+        best_epoch = 0
+    '''

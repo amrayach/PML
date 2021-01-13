@@ -26,7 +26,7 @@ def get_sample_weights(labels):
     return sample_weights
 
 
-def load_data(args, mode='train'):
+def load_data(args, mode='all_data'):
     usecols = list(map(lambda x: int(x), args.get('Data', 'usecols').split(',')))
     chunks = pd.read_csv(args.get('Data', 'dataset') + '/' + mode + '.csv',
                          usecols=usecols,
@@ -79,30 +79,31 @@ def load_data(args, mode='train'):
     #    labels = list(map(lambda x: 1 if x in [1,2] else (3 if x in [4,5] else 2), labels))
 
     number_of_classes = len(set(labels))
-    sample_weights = get_sample_weights(labels)
+    #sample_weights = get_sample_weights(labels)
 
-    if args.getint('Data', 'k_folds') > 1:
-        text_label_list = np.array(list(zip(texts, labels)))
-        np.random.shuffle(text_label_list)
+    if args.getint('Data', 'k_folds') <= 1:
+        kf = KFold(n_splits=2, shuffle=True)
+    else:
         kf = KFold(n_splits=args.getint('Data', 'k_folds'), shuffle=True)
-        folds = []
-        for train_index, test_index in kf.split(text_label_list):
-            train_texts, train_labels = zip(*list(text_label_list[train_index]))
-            test_texts, test_labels = zip(*list(text_label_list[test_index]))
-            train_texts = list(train_texts)
-            train_labels = list(map(lambda x: int(x), list(train_labels)))
-            train_weights = get_sample_weights(train_labels)
-
-            test_texts = list(test_texts)
-            test_labels = list(map(lambda x: int(x), list(test_labels)))
-            test_weights = get_sample_weights(test_labels)
-            #res = (train_texts, torch.LongTensor(train_labels), train_weights, test_texts, torch.LongTensor(test_labels), test_weights, number_of_classes)
-            folds.append((train_texts, torch.LongTensor(train_labels), train_weights, test_texts, torch.LongTensor(test_labels), test_weights, number_of_classes))
-        return folds
 
 
+    text_label_list = np.array(list(zip(texts, labels)))
+    np.random.shuffle(text_label_list)
+    #kf = KFold(n_splits=args.getint('Data', 'k_folds'), shuffle=True)
+    folds = []
+    for train_index, test_index in kf.split(text_label_list):
+        train_texts, train_labels = zip(*list(text_label_list[train_index]))
+        test_texts, test_labels = zip(*list(text_label_list[test_index]))
+        train_texts = list(train_texts)
+        train_labels = list(map(lambda x: int(x), list(train_labels)))
+        train_weights = get_sample_weights(train_labels)
 
-    return texts, torch.LongTensor(labels), number_of_classes, sample_weights
+        test_texts = list(test_texts)
+        test_labels = list(map(lambda x: int(x), list(test_labels)))
+        test_weights = get_sample_weights(test_labels)
+        #res = (train_texts, torch.LongTensor(train_labels), train_weights, test_texts, torch.LongTensor(test_labels), test_weights, number_of_classes)
+        folds.append((train_texts, torch.LongTensor(train_labels), train_weights, test_texts, torch.LongTensor(test_labels), test_weights, number_of_classes))
+    return folds
 
 
 class MyDataset(Dataset):
