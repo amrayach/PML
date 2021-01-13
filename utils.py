@@ -143,6 +143,25 @@ def accuracy(output, target, topk=(1,)):
     return res
 
 
+def init_train_eval_res_dicts(train_dict, eval_dict, folds):
+    metrics = ["accuracy", "precision", "recall", "f1_micro", "f1_macro", "f1_weighted", "neg_log_loss", "loss"]
+    temp_dict = {}
+    for metric in metrics:
+        temp_dict[metric] = []
+
+
+    for i in range(folds):
+        train_dict[i+1] = temp_dict
+        eval_dict[i+1]  = temp_dict
+
+
+def update_train_eval_res_dict(train_dict, eval_dict, train_metrics_res, eval_metrics_res, fold):
+    for metric in train_metrics_res:
+        train_dict[fold][metric].append(train_metrics_res[metric])
+
+    for metric in eval_metrics_res:
+        eval_dict[fold][metric].append(eval_metrics_res[metric])
+
 def init_log(log_file, args, labels):
     with open(log_file, 'a+') as f:
         f.write(f'Model-Log:\n')
