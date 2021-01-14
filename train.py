@@ -72,22 +72,24 @@ def train(model, training_generator, optimizer, criterion, epoch, start_iter, wr
 
     output = {}
     output['accuracy'] = metrics.accuracy_score(y_true, y_pred)
-    output['precision'] = metrics.precision_score(y_true, y_pred)
-    output['recall'] = metrics.recall_score(y_true, y_pred)
+    output['precision_macro'] = metrics.precision_score(y_true, y_pred, average='macro')
+    output['precision_micro'] = metrics.precision_score(y_true, y_pred, average='micro')
+    output['recall_macro'] = metrics.recall_score(y_true, y_pred, average='macro')
+    output['recall_micro'] = metrics.recall_score(y_true, y_pred, average='micro')
     output['f1_micro'] = metrics.f1_score(y_true, y_pred, average='micro')
     output['f1_macro'] = metrics.f1_score(y_true, y_pred, average='macro')
     output['f1_weighted'] = metrics.f1_score(y_true, y_pred, average='weighted')
-    output['neg_log_loss'] = metrics.log_loss(y_true, y_pred)
-    output['loss'] = loss.data
+    output['loss'] = loss.item()
 
     writer.add_scalar('Train/epoch/loss', loss.data, epoch + 1)
     writer.add_scalar('Train/epoch/acc', output['accuracy'], epoch + 1)
-    writer.add_scalar('Train/epoch/precision', output['precision'], epoch + 1)
-    writer.add_scalar('Train/epoch/recall', output['recall'], epoch + 1)
+    writer.add_scalar('Train/epoch/precision_macro', output['precision_macro'], epoch + 1)
+    writer.add_scalar('Train/epoch/precision_micro', output['precision_micro'], epoch + 1)
+    writer.add_scalar('Train/epoch/recall_macro', output['recall_macro'], epoch + 1)
+    writer.add_scalar('Train/epoch/recall_micro', output['recall_micro'], epoch + 1)
     writer.add_scalar('Train/epoch/f1-weighted', output['f1_weighted'], epoch + 1)
     writer.add_scalar('Train/epoch/f1-micro', output['f1_micro'], epoch + 1)
     writer.add_scalar('Train/epoch/f1-macro', output['f1_macro'], epoch + 1)
-    writer.add_scalar('Train/epoch/neg-log-loss', output['neg_log_loss'], epoch + 1)
 
     for name, param in model.named_parameters():
         writer.add_histogram(name, param, epoch + 1)
@@ -99,8 +101,10 @@ def train(model, training_generator, optimizer, criterion, epoch, start_iter, wr
         f.write(f'Training on Epoch {epoch + 1} \n')
         f.write(f'Loss: {loss.data} \n')
         f.write(f"Accuracy: {output['accuracy']} \n")
-        f.write(f'Precision: {output["precision"]} \n\n')
-        f.write(f'Recall: {output["recall"]} \n\n')
+        f.write(f'Precision Macro: {output["precision_macro"]} \n\n')
+        f.write(f'Precision Micro: {output["precision_micro"]} \n\n')
+        f.write(f'Recall Macro: {output["recall_macro"]} \n\n')
+        f.write(f'Recall Micro: {output["recall_micro"]} \n\n')
         f.write(f'F1 Weighted score: {output["f1_weighted"]} \n\n')
         f.write(f'F1 Micro score: {output["f1_micro"]} \n\n')
         f.write(f'F1 Macro score: {output["f1_macro"]} \n\n')
@@ -149,22 +153,24 @@ def evaluate(model, validation_generator, criterion, epoch, writer, log_file, pr
 
     output = {}
     output['accuracy'] = metrics.accuracy_score(y_true, y_pred)
-    output['precision'] = metrics.precision_score(y_true, y_pred)
-    output['recall'] = metrics.recall_score(y_true, y_pred)
+    output['precision_macro'] = metrics.precision_score(y_true, y_pred, average='macro')
+    output['precision_micro'] = metrics.precision_score(y_true, y_pred, average='micro')
+    output['recall_macro'] = metrics.recall_score(y_true, y_pred, average='macro')
+    output['recall_micro'] = metrics.recall_score(y_true, y_pred, average='micro')
     output['f1_micro'] = metrics.f1_score(y_true, y_pred, average='micro')
     output['f1_macro'] = metrics.f1_score(y_true, y_pred, average='macro')
     output['f1_weighted'] = metrics.f1_score(y_true, y_pred, average='weighted')
-    output['neg_log_loss'] = metrics.log_loss(y_true, y_pred)
-    output['loss'] = loss.data
+    output['loss'] = loss.item()
 
     writer.add_scalar('Validation/epoch/loss', loss.data, epoch + 1)
     writer.add_scalar('Validation/epoch/acc', output['accuracy'], epoch + 1)
-    writer.add_scalar('Validation/epoch/precision', output['precision'], epoch + 1)
-    writer.add_scalar('Validation/epoch/recall', output['recall'], epoch + 1)
+    writer.add_scalar('Validation/epoch/precision_macro', output['precision_macro'], epoch + 1)
+    writer.add_scalar('Validation/epoch/precision_micro', output['precision_micro'], epoch + 1)
+    writer.add_scalar('Validation/epoch/recall_macro', output['recall_macro'], epoch + 1)
+    writer.add_scalar('Validation/epoch/recall_micro', output['recall_micro'], epoch + 1)
     writer.add_scalar('Validation/epoch/f1-weighted', output['f1_weighted'], epoch + 1)
     writer.add_scalar('Validation/epoch/f1-micro', output['f1_micro'], epoch + 1)
     writer.add_scalar('Validation/epoch/f1-macro', output['f1_macro'], epoch + 1)
-    writer.add_scalar('Validation/epoch/neg-log-loss', output['neg_log_loss'], epoch + 1)
 
     report = metrics.classification_report(y_true, y_pred)
     print(report)
@@ -173,8 +179,10 @@ def evaluate(model, validation_generator, criterion, epoch, writer, log_file, pr
         f.write(f'Validation on Epoch {epoch + 1} \n')
         f.write(f'Loss: {loss.data} \n')
         f.write(f"Accuracy: {output['accuracy']} \n")
-        f.write(f'Precision: {output["precision"]} \n\n')
-        f.write(f'Recall: {output["recall"]} \n\n')
+        f.write(f'Precision Macro: {output["precision_macro"]} \n\n')
+        f.write(f'Precision Micro: {output["precision_micro"]} \n\n')
+        f.write(f'Recall Macro: {output["recall_macro"]} \n\n')
+        f.write(f'Recall Micro: {output["recall_micro"]} \n\n')
         f.write(f'F1 Weighted score: {output["f1_weighted"]} \n\n')
         f.write(f'F1 Micro score: {output["f1_micro"]} \n\n')
         f.write(f'F1 Macro score: {output["f1_macro"]} \n\n')
@@ -250,26 +258,28 @@ def test(args, test_generator, log_file, writer, number_of_classes, fold, time_s
     print(report)
     output = {}
     output['accuracy'] = metrics.accuracy_score(y_true, y_pred)
-    output['precision'] = metrics.precision_score(y_true, y_pred)
-    output['recall'] = metrics.recall_score(y_true, y_pred)
+    output['precision_macro'] = metrics.precision_score(y_true, y_pred, average='macro')
+    output['precision_micro'] = metrics.precision_score(y_true, y_pred, average='micro')
+    output['recall_macro'] = metrics.recall_score(y_true, y_pred, average='macro')
+    output['recall_micro'] = metrics.recall_score(y_true, y_pred, average='micro')
     output['f1_micro'] = metrics.f1_score(y_true, y_pred, average='micro')
     output['f1_macro'] = metrics.f1_score(y_true, y_pred, average='macro')
     output['f1_weighted'] = metrics.f1_score(y_true, y_pred, average='weighted')
-    output['neg_log_loss'] = metrics.log_loss(y_true, y_pred)
-    output['loss'] = loss.data
-    output['y_true'] = y_true
-    output['y_pred'] = y_pred
+    output['loss'] = loss.item()
+    output['y_true'] = list(y_true)
+    output['y_pred'] = list(y_pred)
 
     test_res_folds[fold] = output
 
     writer.add_scalar('Test/fold/loss', loss.data, fold)
     writer.add_scalar('Test/fold/acc', output['accuracy'], fold)
-    writer.add_scalar('Test/fold/precision', output['precision'], fold)
-    writer.add_scalar('Test/fold/recall', output['recall'], fold)
+    writer.add_scalar('Test/fold/precision_micro', output['precision_micro'], fold)
+    writer.add_scalar('Test/fold/precision_macro', output['precision_macro'], fold)
+    writer.add_scalar('Test/fold/recall_micro', output['recall_micro'], fold)
+    writer.add_scalar('Test/fold/recall_macro', output['recall_macro'], fold)
     writer.add_scalar('Test/fold/f1-weighted', output['f1_weighted'], fold)
     writer.add_scalar('Test/fold/f1-micro', output['f1_micro'], fold)
     writer.add_scalar('Test/fold/f1-macro', output['f1_macro'], fold)
-    writer.add_scalar('Test/fold/neg-log-loss', output['neg_log_loss'], fold)
 
     report = metrics.classification_report(y_true, y_pred)
     print(report)
@@ -278,8 +288,10 @@ def test(args, test_generator, log_file, writer, number_of_classes, fold, time_s
         f.write(f'Test on Fold {fold} \n')
         f.write(f'Loss: {loss.data} \n')
         f.write(f"Accuracy: {output['accuracy']} \n")
-        f.write(f'Precision: {output["precision"]} \n\n')
-        f.write(f'Recall: {output["recall"]} \n\n')
+        f.write(f'Precision_micro: {output["precision_micro"]} \n\n')
+        f.write(f'Precision_macro: {output["precision_macro"]} \n\n')
+        f.write(f'Recall_micro: {output["recall_micro"]} \n\n')
+        f.write(f'Recall_macro: {output["recall_macro"]} \n\n')
         f.write(f'F1 Weighted score: {output["f1_weighted"]} \n\n')
         f.write(f'F1 Micro score: {output["f1_micro"]} \n\n')
         f.write(f'F1 Macro score: {output["f1_macro"]} \n\n')
@@ -326,7 +338,7 @@ def save_checkpoint(model, state, optimizer, args, epoch, validation_loss, valid
                    optimizer.state_dict()[
                        'param_groups'][0]['lr'],
                    round(
-                       validation_loss.item(), 4),
+                       validation_loss, 4),
                    round(
                        validation_accuracy, 4),
                    round(
@@ -456,7 +468,8 @@ def main():
 
         start_iter = 0
         start_epoch = 0
-        best_f1 = 0
+        best_f1_micro = 0
+        best_f1_macro = 0
         best_epoch = 0
 
         if args.get('Train', 'scheduler') == 'clr':
@@ -521,15 +534,16 @@ def main():
                         for param_group in optimizer.param_groups:
                             param_group['lr'] = current_lr
 
-                state = {'epoch': epoch, 'optimizer': optimizer.state_dict(), 'best_f1': best_f1}
-                if args.getboolean('Log', 'checkpoint'):
-                    if args.getint('Log', 'save_interval') > 0 and epoch % args.getint('Log', 'save_interval') == 0:
-                        save_checkpoint(model, state, optimizer, args, epoch, validation_output['loss'],
-                                        validation_output['accuracy'],
-                                        validation_output['f1_micro'], i + 1, False, time_stamp)
+                state = {'epoch': epoch, 'optimizer': optimizer.state_dict(), 'best_f1_micro': best_f1_micro, 'best_f1_macro': best_f1_macro}
+                #if args.getboolean('Log', 'checkpoint'):
+                #    if args.getint('Log', 'save_interval') > 0 and epoch % args.getint('Log', 'save_interval') == 0:
+                #        save_checkpoint(model, state, optimizer, args, epoch, validation_output['loss'],
+                #                        validation_output['accuracy'],
+                #                        validation_output['f1_micro'], i + 1, False, time_stamp)
 
-                if validation_output['f1_micro'] > best_f1:
-                    best_f1 = validation_output['f1_micro']
+                if validation_output['f1_micro'] > best_f1_micro and validation_output['f1_macro'] > best_f1_macro:
+                    best_f1_micro = validation_output['f1_micro']
+                    best_f1_macro = validation_output['f1_macro']
                     best_epoch = epoch
                     save_checkpoint(model, state, optimizer, args, epoch, validation_output['loss'],
                                     validation_output['accuracy'],
@@ -565,6 +579,7 @@ def main():
         "./logs/" + time_stamp + '_' + args.get('Data', 'dataset').split('/')[1] + '_' + args.get('Train',
                                                                                                   'criterion') + '/' + "validation_res_folds.bin",
         "wb"))
+    print()
 
 
 if __name__ == '__main__':

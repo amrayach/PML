@@ -144,7 +144,7 @@ def accuracy(output, target, topk=(1,)):
 
 
 def init_train_eval_res_dicts(train_dict, eval_dict, folds):
-    metrics = ["accuracy", "precision", "recall", "f1_micro", "f1_macro", "f1_weighted", "neg_log_loss", "loss"]
+    metrics = ["accuracy", "precision_micro", "precision_macro", "recall_micro", "recall_macro", "f1_micro", "f1_macro", "f1_weighted", "loss"]
     temp_dict = {}
     for metric in metrics:
         temp_dict[metric] = []
