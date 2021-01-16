@@ -2,12 +2,18 @@ import configparser
 import itertools
 import os
 from collections import Counter
+from random import random
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import numpy as np
 import squarify
+import pickle
+from sklearn import svm, datasets
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
+from sklearn.utils.multiclass import unique_labels
 
 from utils import remove_double_new_line, remove_special_characters, remove_stop_words, lower, remove_numbers, \
     remove_single_letters, remove_single_characters
@@ -16,16 +22,16 @@ from utils import remove_double_new_line, remove_special_characters, remove_stop
 def load_data(args, mode='train'):
     text = []
     usecols = list(map(lambda x: int(x), args.get('Data', 'usecols').split(',')))
-    path = args.get('Data', 'dataset') + '/'+ mode +'.csv';
+    path = args.get('Data', 'dataset') + '/' + mode + '.csv';
     print('\n path: ' + path)
     data = pd.read_csv(path,
-                         usecols=usecols,
-                         encoding=args['Data'].get('encoding'),
-                         sep=args['Data'].get('csv_sep'),
-                         doublequote=True)
-    labels  = data.iloc[:, 0].tolist()
+                       usecols=usecols,
+                       encoding=args['Data'].get('encoding'),
+                       sep=args['Data'].get('csv_sep'),
+                       doublequote=True)
+    labels = data.iloc[:, 0].tolist()
     if args.get('Data', 'dataset') == 'yelp':
-        text    = data.iloc[:, 1].tolist()
+        text = data.iloc[:, 1].tolist()
     elif args.get('Data', 'dataset') == 'ag_news':
         text = (data.iloc[:, 1] + ' ' + data.iloc[:, 2]).tolist()
 
@@ -36,9 +42,10 @@ def load_data(args, mode='train'):
     text = [remove_single_characters(t) for t in text]
     return labels, text
 
-def word_pos_neg_freq_dict(x, y):
 
-    label_word = list(itertools.chain.from_iterable([[(word, y[i]) for word in line.split()] for i, line in enumerate(x)]))
+def word_pos_neg_freq_dict(x, y):
+    label_word = list(
+        itertools.chain.from_iterable([[(word, y[i]) for word in line.split()] for i, line in enumerate(x)]))
     neg_words = dict()
     pos_words = dict()
     for i, line in enumerate(x):
@@ -49,10 +56,11 @@ def word_pos_neg_freq_dict(x, y):
             for word in line.split():
                 pos_words[word] = pos_words.get(word, 0) + 1
 
-
     return pos_words, neg_words
 
+
 import operator
+
 
 def most_frequent_words(text=None, n=0):
     if text == None:
@@ -62,7 +70,7 @@ def most_frequent_words(text=None, n=0):
     words = text.split()
 
     counter = Counter(words)
-    counter = sorted(counter.items(), key=operator.itemgetter(1),reverse=True)
+    counter = sorted(counter.items(), key=operator.itemgetter(1), reverse=True)
     counter = dict(counter[:n])
     return counter
 
@@ -82,12 +90,12 @@ def most_frequent_chars(text=None, n=0):
     counter = dict(counter[:n])
     return counter
 
+
 ####################### yelp plots ################################
-def plt_most_freq_words(x, y, output_num=15,outfile='plt_most_freq_words.png'):
+def plt_most_freq_words(x, y, output_num=15, outfile='plt_most_freq_words.png'):
     print("---- step 1 -----")
     counter = most_frequent_words(x, output_num)
     print(counter)
-
 
     sns.set()
     print("---- step 2 -----")
@@ -97,19 +105,20 @@ def plt_most_freq_words(x, y, output_num=15,outfile='plt_most_freq_words.png'):
     neg_dict = [neg_dict[k] for k in counter.keys()]
 
     print("---- step 3 -----")
-    pos_neg_tuples = list(zip(pos_dict,neg_dict))
+    pos_neg_tuples = list(zip(pos_dict, neg_dict))
 
     print("---- step 4 -----")
-    df = pd.DataFrame(pos_neg_tuples, columns=['negative', 'positive'],index=counter.keys())
+    df = pd.DataFrame(pos_neg_tuples, columns=['negative', 'positive'], index=counter.keys())
     df['negative'] = -df['negative']
     fig = df.plot(kind='bar', stacked=True);
     plt.show()
     fig.get_figure().savefig(outfile)
 
+
 ############################# ag news plots #####################
 def word_class_freq_dict(x, y):
-
-    label_word = list(itertools.chain.from_iterable([[(word, y[i]) for word in line.split()] for i, line in enumerate(x)]))
+    label_word = list(
+        itertools.chain.from_iterable([[(word, y[i]) for word in line.split()] for i, line in enumerate(x)]))
 
     class_1 = Counter([item[0] for item in label_word if item[1] == 1])
     class_2 = Counter([item[0] for item in label_word if item[1] == 2])
@@ -117,6 +126,7 @@ def word_class_freq_dict(x, y):
     class_4 = Counter([item[0] for item in label_word if item[1] == 4])
 
     return [class_1, class_2, class_3, class_4]
+
 
 def bar_plot_vertical(x, y):
     df = pd.read_csv(args.get('Data', 'data_source') + args.get('Data', 'dataset') + '/mpg_ggplot2.csv')
@@ -139,14 +149,15 @@ def bar_plot_vertical(x, y):
     plt.xticks(ticks=bins[::3], labels=[round(b, 1) for b in bins[::3]])
     plt.show()
 
+
 def bar_plot_horizontal(x, y):
     category_names = ['World', 'Sports', 'Business', 'Sci/Tech']
     classes_freq = word_class_freq_dict(x, y)
 
-    word_freq_tuples = most_frequent_words(x,15)
+    word_freq_tuples = most_frequent_words(x, 15)
 
     labels = [w[0] for w in word_freq_tuples]
-    results = {word : [c.get(word,0) for c in classes_freq] for word in labels}
+    results = {word: [c.get(word, 0) for c in classes_freq] for word in labels}
     counts = Counter(y)
     sorted(counts.items())
 
@@ -170,8 +181,8 @@ def bar_plot_horizontal(x, y):
             r, g, b, _ = color
             text_color = 'white' if r * g * b < 0.5 else 'darkgrey'
             for y, (x, c) in enumerate(zip(xcenters, widths)):
-                ax.text(x, y, str(int(c)), ha='center', va='center',color=text_color)
-        ax.legend(ncol=len(category_names), bbox_to_anchor=(0, 1),loc='lower left', fontsize='small')
+                ax.text(x, y, str(int(c)), ha='center', va='center', color=text_color)
+        ax.legend(ncol=len(category_names), bbox_to_anchor=(0, 1), loc='lower left', fontsize='small')
         plt.xlabel('occurences')
         plt.ylabel("word")
         return fig, ax
@@ -181,10 +192,8 @@ def bar_plot_horizontal(x, y):
     plt.show()
 
 
-
-
-def treemap_plot(x,y):
-    word_freq_tuples = most_frequent_words(x,15)
+def treemap_plot(x, y):
+    word_freq_tuples = most_frequent_words(x, 15)
     word_freq_dict = dict(word_freq_tuples)
 
     labels = list(word_freq_dict.keys())
@@ -198,22 +207,23 @@ def treemap_plot(x,y):
 
     colors = [plt.cm.Spectral(i / float(len(labels))) for i in range(len(labels))]
     fig = plt.figure(figsize=(12, 8), dpi=80)
-    squarify.plot(sizes=data, label=labels, color=colors, alpha=.8, text_kwargs={'fontsize':20})
+    squarify.plot(sizes=data, label=labels, color=colors, alpha=.8, text_kwargs={'fontsize': 20})
 
     plt.title('Treemap of AG News Class')
     plt.axis('off')
     plt.show()
     fig.savefig('plots/ag_news_treemap.png', format='png', dpi=300)
 
+
 ########################## generic plots ################################
 def classes_pie(y, outfile='classes_pie.png', dataset=None):
     fig = plt.figure(figsize=(6, 5))
-    labels=[]
+    labels = []
     dataset_name = None
     if dataset == None:
         return
     elif 'yelp' in dataset:
-        labels =  'negative', 'positive'
+        labels = 'negative', 'positive'
         dataset_name = 'yelp'
     elif 'ag_news' in dataset:
         labels = 'World', 'Sports', 'Business', 'Sci/Tech'
@@ -225,7 +235,7 @@ def classes_pie(y, outfile='classes_pie.png', dataset=None):
 
     # Declare pie chart, where the slices will be ordered and plotted counter-clockwise:
     wedges, texts, autotexts = plt.pie(list(counts.values()), labels=labels, autopct='%1.0f%%', startangle=90,
-                                       pctdistance=1.2, labeldistance=1.3, explode=[0.05]*len(labels))
+                                       pctdistance=1.2, labeldistance=1.3, explode=[0.05] * len(labels))
 
     plt.axis('equal')
     if 'yelp' in outfile:
@@ -238,13 +248,96 @@ def classes_pie(y, outfile='classes_pie.png', dataset=None):
 
 
 def show(x, y, dataset=None):
-    classes_pie(y,outfile='plots/'+dataset+'_classes_pie'+'.png' ,dataset = dataset)
+    classes_pie(y, outfile='plots/' + dataset + '_classes_pie' + '.png', dataset=dataset)
     if dataset == 'yelp':
-        plt_most_freq_words(x, y, outfile='plots/'+dataset+'_bar_most_freq_words.png')
+        plt_most_freq_words(x, y, outfile='plots/' + dataset + '_bar_most_freq_words.png')
     elif dataset == 'ag_news':
-        treemap_plot(x,y)
+        treemap_plot(x, y)
         bar_plot_horizontal(x, y)
 
+def plot_bar_loss():
+    print("nothing")
+
+def violin_plot_loss(data, file_path):
+    fig, ax = plt.subplots()
+    sns.set_theme(style="whitegrid")
+    for col in data:
+        plt.clf()
+        ax = sns.violinplot(x='fold', y=col, data=data)
+        plt.show()
+        plt.savefig('plots/' + file_path + '/violin_' + col + '.png', format='png', dpi=300)
+
+
+def plot_confusion_matrix(y_true, y_pred, classes, normalize=False, title=None, cmap=plt.cm.Blues, fold=0):
+    if not title:
+        if normalize:
+            title = 'Normalized confusion matrix'
+        else:
+            title = 'Confusion matrix, without normalization'
+
+    # Compute confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+    # Only use the labels that appear in the data
+    if not classes:
+        classes = [str(l) for l in set(y_true)]
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print(f'Confusion matrix, without normalization. fold{fold}')
+
+    print(cm)
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
+    ax.figure.colorbar(im, ax=ax)
+    # We want to show all ticks...
+    ax.set(xticks=np.arange(cm.shape[1]),
+           yticks=np.arange(cm.shape[0]),
+           xticklabels=classes, yticklabels=classes,
+           title=title,
+           ylabel='True label',
+           xlabel='Predicted label')
+
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+
+    # Loop over data dimensions and create text annotations.
+    fmt = '.2f' if normalize else 'd'
+    thresh = np.sum(cm) / (len(cm) * len(cm[0]))
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(j, i, format(cm[i, j], fmt), ha="center", va="center",
+                    color="white" if cm[i, j] > thresh else "black")
+    fig.tight_layout()
+    return fig, ax
+
+
+def plt_confusion_matrix(y_true, y_pred, file_path, fold=0):
+    plt.clf()
+    fig, ax = plot_confusion_matrix(y_true, y_pred, classes=None, fold=fold)
+    plt.show()
+    fig.savefig('plots/' + file_path + '/' + 'confusion_matrix_' + str(fold) + '.png', format='png', dpi=300)
+    plt.close(fig)
+
+def data_to_df(results):
+    res = dict(results[1])
+    res2 = dict(results[2])
+    res3 = dict(results[3])
+    res4 = dict(results[4])
+    res5 = dict(results[5])
+
+    res['fold'] = [1] * len(res['accuracy'])
+    res2['fold'] = [2] * len(res2['accuracy'])
+    res3['fold'] = [3] * len(res3['accuracy'])
+    res4['fold'] = [4] * len(res4['accuracy'])
+    res5['fold'] = [5] * len(res5['accuracy'])
+
+    results = [res, res2, res3, res4, res5]
+    frames = [pd.DataFrame.from_dict(fold) for fold in results]
+    merged_df = pd.concat(frames, join="inner")
+
+    return merged_df;
 
 if __name__ == '__main__':
     args = configparser.ConfigParser()
@@ -253,5 +346,30 @@ if __name__ == '__main__':
     if not os.path.exists('plots'):
         os.makedirs('plots')
 
-    y, x = load_data(args)
-    show(x, y, args.get('Data', 'dataset'))
+    # y, x = load_data(args)
+    # show(x, y, args.get('Data', 'dataset'))
+    files_path = args.get('Test', 'loss_data_path')
+    for dir in os.listdir("./" + files_path):
+        for file_name in os.listdir("./" + files_path + '/' + dir):
+            if '.bin' not in file_name:
+                continue
+
+            file_path = files_path + '/' + dir + '/' + file_name
+            print(f" -- generating plots from: {file_path} --")
+            pickle_in = open(file_path, "rb")
+            loss_data = pickle.load(pickle_in)
+
+            if not os.path.exists('plots/' + file_path.split('.')[0]):
+                os.makedirs('plots/' + file_path.split('.')[0])
+
+            if 'test' in file_name:
+                for fold in loss_data:
+                    y_true = loss_data[fold]['y_true']
+                    y_pred = loss_data[fold]['y_pred']
+                    plt_confusion_matrix(y_true, y_pred, file_path.split('.')[0], fold)
+            else:
+                df = data_to_df(loss_data)
+                #
+                violin_plot_loss(df,file_path.split('.')[0])
+
+    print("you'll find the generated plots in plots folder")
